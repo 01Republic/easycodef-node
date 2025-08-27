@@ -60,13 +60,26 @@ export function requestProduct(
 
         let result = '';
         // + 응답결과 처리
-        if (response.statusCode === 200) {
+        if (response === undefined) {
+          result = 'Response undefined';
+        } else if (response.statusCode === 200) {
           result = response.body ? decodeString(response.body) : response.body;
         } else {
-          let bodyError = JSON.parse(response.body ? decodeString(response.body) : response.body).error;
-          if (bodyError === 'invalid_token') {
+          let bodyError = '';
+          try {
+            bodyError = JSON.parse(
+              response.body ? decodeString(response.body) : response.body
+            ).error;
+          } catch {
+            bodyError = 'json_parse_error';
+          }
+
+          if (
+            bodyError === 'invalid_token' ||
+            bodyError === 'json_parse_error'
+          ) {
             result = bodyError;
-          }else {
+          } else {
             result = getErrorMsgResult(response.statusCode);
           }
         }
@@ -193,7 +206,7 @@ function createReqTokenOptions(clientID: string, clientSecret: string): any {
  */
 function decodeString(str: string): string {
   try {
-    return decodeURIComponent(str.replace(/\+/g,' '));
+    return decodeURIComponent(str.replace(/\+/g, ' '));
   } catch (e) {
     return unescape(decodeURI(str));
   }
